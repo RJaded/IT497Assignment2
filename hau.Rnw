@@ -1,0 +1,217 @@
+\documentclass{article}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\title{Government Spending - North America}
+\author { Mr. Ruturaj Jayawant
+\\ School of Information Technology 
+\\ Illinois State University
+\\
+\texttt{rsjayaw@ilstu.edu}}
+\date{October 22, 2014} 
+\maketitle
+ 
+\section{Introduction}
+  
+This discussion would anaylyze the government spending in the countires of North America. For our discussion, we will be analyzing the following three countires in the North America: United States, Canada and Mexico. 
+Government Spending, in simple words, can be termend as the inclusion of government consumpion, investments and transfer payments. Every country prepares an annual budget which consists funds for the various departments who would look for the well-being of the nation. This budget depends on the revenue growth of the country as well as its foreign relations. 
+
+
+\section{Tutorial}
+\subsection{Data Fetching and Data Cleaning (For Bar Graph by Level)}
+
+Firstly, we need to install certain packages so that we can use certain functions. For our analysis, we will require the following three packages: \textit{Quandl}, \textit{ggplot2}, and \textit{reshape2}. After importing the above three libraries, we can use various functions such as \textit{ggplot()}, \textit{Quandl()}, \textit{melt()}, etc. 
+
+<<reg>>=
+library(Quandl)
+library(ggplot2)
+library(reshape2)
+@
+
+
+The code chunk below would fetch the data with the help of Quandl API.
+Here \textbf{SpendingDataUSA}, \textbf{SpendingDataCanada} and \textbf{SpendingDataMexico} dataframes will be initialzed to the values fetched from the Quanddl API for USA, Canada and Mexico respectively.
+The \textbf{trim\_start} and \textbf{trim\_end} would define the range of the data. 
+Lastly, \textbf{authcode} is optional, which authenticates the user to the Quandl website. 
+We can register on Quandl Webite and obtain an unique \textbf{authcode}.
+
+
+<<reg>>=
+SpendingDataUSA <- Quandl("ODA/USA_GGX", 
+  trim_start = "1980-12-31", trim_end = "2019-12-31", 
+  authcode = "pRKG3j-kt3Cs9qBer1sD")
+
+SpendingDataCanada <- Quandl("ODA/CAN_GGX", 
+  trim_start = "1980-12-31", trim_end = "2019-12-31",
+  authcode = "pRKG3j-kt3Cs9qBer1sD")
+
+SpendingDataMexico <- Quandl("ODA/MEX_GGX", 
+  trim_start = "1990-12-31", trim_end = "2019-12-31", 
+  authcode = "pRKG3j-kt3Cs9qBer1sD")
+@
+
+The code chunk below demonstrates the use of \emph{plyr()} command, which is used to change the name of the column in a dataframe. In this case, this command changes the column name from \texttt{Value} to \texttt{SpendingDataUSA} in the \textbf{SpendingDataUSA} dataframe. Similarly, the  \emph{plyr()} function can be used on the \textbf{SpendingDataCanada} and \textbf{SpendingDataMexico} dataframes. In the \textit{plyr} command, we use \texttt{replace = c{"Value" = "USA"}} to specify which column's name would be altered. Also, \texttt{x = SpendingDataUSA} is used to indicate the dataframe for which the coulmn name needs to be altered.
+
+<<reg>>=
+
+SpendingDataUSA <- plyr :: rename(x = SpendingDataUSA, 
+  replace=c("Value" = "USA"))
+
+SpendingDataCanada <- plyr :: rename(x = SpendingDataCanada, 
+  replace=c("Value" = "Canada"))
+
+SpendingDataMexico <- plyr :: rename(x = SpendingDataMexico, 
+  replace = c("Value" = "Mexico"))
+@
+
+Here, we intend to gather the government spending of USA, Canada and Mexico into a single dataframe \textbf{SpendingData}. Hence, we use the \textit{merge()} function. We use the \textit{merge()} function twice. During its first use, we bring the data from the \textbf{SpendingDataUSA} and \textbf{SpendingDataCanada} in the \textbf{SpendingData} dataframe. During the second use of \textit{merge()}, we bring the data from the \textbf{SpendingData} and \textbf{SpendingDataMexico} in the \textbf{SpendingData} dataframe.
+
+<<reg>>=
+
+SpendingData <- merge(SpendingDataUSA, SpendingDataCanada, 
+  by.x = "Date", by.y = "Date", all.x = T, all.y = F)
+
+SpendingData <- merge(SpendingData, SpendingDataMexico, 
+  by.x = "Date", by.y = "Date", all.x = T, all.y = F)
+@
+
+Now, we are completed with data cleaning. \textit{write.csv()} function is used to write the data from the dataframe into a CSV file. Here, \texttt{rows.names} is initialized to \texttt{FALSE} so that the rows in the CSV file would not be indexed.
+<<reg>>=
+
+write.csv(SpendingData, "SpendingDataNorthAmerica.csv", 
+  row.names = FALSE)
+@
+
+\break
+
+\subsection{Data}
+The \textbf{SpendingData} consists the data extracted with the help of Quandl API.
+<<reg>>=
+SpendingData
+@
+In the above dataframe, the first column \texttt{Date}, consists of the range of dates as specified by the Quandl API. The second column \texttt{USA}, consists the government spending by USA for the corresponding date. The third column \texttt{Canada}, consists the government spending by Canada for the corresponding date. The final column \texttt{Mexico}, consists the government spending by Mexico for the corresponding date.
+
+
+As we have the data cleaned, we will need to determine the class of the object of our dataframe \textbf{SpendingData}. This would be done with the help of \textit{class()} function. The \textit{class()} function is used in the following way:
+<<reg>>=
+class(SpendingData)
+@
+
+Further, we use the \textit{str()} function to view the internal structure of the objects in the \textbf{SpendingData} dataframe.
+<<reg>>=
+str(SpendingData)
+@
+
+Lastly, we use the \textit{summary()} function to understand the statistics of the data. The \textit{summary()} function computes the mean, median, minimum and maximum values in each column.
+<<reg>>=
+summary(SpendingData)
+@
+
+\break
+
+\subsection{Reshaping the Data (For Bar Graph by Level)}
+The \textbf{SpendingData} dataframe consists the data in the wide format. To plot a bar graph of the \textbf{SpendingData} dataframe, we will require the dataframe in long format. Hence, to transform the data into long format, we use the \textit{melt()}. Here, the columns can be merged wih the help of \texttt{measure.vars = c("col1", "col2", "col3"...)}. 
+<<reg>>=
+data <- melt(SpendingData, id.vars = "Date", 
+  measure.vars = c("USA", "Canada", "Mexico"))
+
+data <- plyr :: rename(x = data, 
+  replace=c("variable" = "Country", "value" = "Money_Spent"))
+@
+Now the \textbf{data} dataframe is ready to be plotted and thus, Government Spending(By Level) graph can be drawn for USA, Canada and Mexico.
+
+\subsection{Data Fetching and Data Cleaning (For Bar Graph by Change)}
+Now, we will need to compute the values for the \texttt{ChangeUSA}, \texttt{ChangeCanada} and \texttt{ChangeMexico} to draw the graph for Governemnt Spending(North America) - By Change. Firstly, we will create a new dataframe \textbf{data1} and initialize it to \textbf{SpendingData}. Then we add columns \texttt{ChangeUSA}, \texttt{ChangeCanada}, and \texttt{ChangeMexico} to the \textbf{data1} dataframe by initializing these columns to \texttt{0}. Laslty, we compute the values of the \texttt{ChangeUSA} column by the following formula:
+\\
+\texttt{ChangeUSA[current] = USA[next] - USA[current]}.
+
+This formula is written in the \texttt{for} loop ranging from 1 to 39. Similarly, we can compute the values for \texttt{ChangeCanada} and \texttt{ChangeMexico} columns.
+
+<<reg>>=
+data1 <- SpendingData
+
+data1$ChangeUSA <- 0 
+ 
+for (i in 1:39 ) 
+{
+  data1$ChangeUSA[i] <- data1$USA[i+1] - data1$USA[i]
+}
+
+data1$ChangeCanada <- 0
+
+for (i in 1:39 ) 
+{
+  data1$ChangeCanada[i] <- data1$Canada[i+1] - data1$Canada[i]
+}
+
+data1$ChangeMexico <- 0
+
+for (i in 1:39 ) 
+{
+  data1$ChangeMexico[i] <- data1$Mexico[i+1] - data1$Mexico[i]
+}
+@
+
+\break
+
+Lastly, we do not require the \texttt{USA}, \texttt{Canada}, and \texttt{Mexico} columns. Hence, we initialze these columns to \texttt{NULL}.
+<<reg>>=
+data1$USA <- NULL
+data1$Canada <- NULL
+data1$Mexico <- NULL
+@
+Thus, we have the cleaned data in the \textbf{data1} dataframe.
+
+\subsection{Reshaping the Data (For Bar Graph by Change)}
+The \textbf{data1} dataframe consists the data in the wide format. To plot a bar graph of the \textbf{data1} dataframe, we will require the dataframe in long format. Hence, to transform the data into long format, we use the \textit{melt()}. Here, the columns can be merged wih the help of \texttt{measure.vars = c("col1", "col2", "col3"...)}. 
+<<reg>>=
+data2 <- melt(data1, id.vars = "Date", 
+  measure.vars = c("ChangeUSA", "ChangeCanada", "ChangeMexico"))
+
+data2 <- plyr :: rename(x = data2, 
+  replace=c("variable" = "Country", 
+  "value" = "Change_Money_Spent"))
+@
+Now the \textbf{data2} dataframe is ready to be plotted and thus, Government Spending(By Change) graph can be drawn for USA, Canada and Mexico.
+
+\break
+
+\section{Results}
+In the code chunk below, we have the Date along the X-axis and Money\_Spent along the Y-axis. We fill the graph with the values in the \texttt{Country} column. \textit{ggplot()} is used to draw a graph which takes arguments as dataframe and \texttt{aes()} which is used to define the axes of the graph. \textit{ggtitle()} is used add a title to the graph. Lastly, \textit{scale\_fill\_manual()} is used to manually alter the colors used in the graph. 
+<<label = fig1, fig = TRUE, echo = TRUE>>=
+ggplot(data = data, aes(x = Date, y = Money_Spent, fill = Country)) +
+  geom_bar(stat = "identity", position = position_dodge()) + 
+  ggtitle("Government Spending (North America) - By Level") +
+  scale_fill_manual(values=c("blue", "red", "green"))
+@
+
+The above graph shows the Governemnt Spending in North America for USA, Canada and Mexico by level. In this graph, we notice that there has been a steady growth in government spending for the countries in North America since 1980.
+
+\break
+In the code chunk below, we have the Date along the X-axiz and Change\_Money\_Spent along the Y-axis. We fill the graph with the values in the \texttt{Country} column. \textit{ggplot()} is used to draw a graph which takes arguments as dataframe and \texttt{aes()} which is used to define the axes of the graph. \textit{ggtitle()} is used add a title to the graph. Lastly, \textit{scale\_fill\_manual()} is used to manually alter the colors used in the graph. 
+
+<<label = fig2, fig = TRUE, echo = TRUE>>=
+ggplot(data = data2, aes(x = Date, y = Change_Money_Spent, fill = Country)) + 
+  geom_bar(stat = "identity", position = position_dodge()) + 
+  ggtitle("Government Spending (North America) - By Change") +
+  scale_fill_manual(values=c("blue", "red", "green"))
+@
+
+The graph above shows the Governemnt Spending in North America for USA, Canada and Mexico by change. In this graph, we notice that there was a constant growth in the governemnt spending in the North American countires. However, during 2007-10, it is seen that, there has been a significant rise as well as significant decresae in the government spedning of USA.
+
+\break
+
+\section{Conclusion}
+We have analysed the government spending of the North American countries. Since 1990, there had been no significant change with the Mexican Government spending. However, in 2009, there was a significant rise in the government spending of USA. The reason for this will be credited to the Great Recession. Hence, the USA governement implemented Stimulus Act, which intended to save and create jobs. The approximate cost of the Stimulus Package was around \$ 787 billion.
+\\In Canada, during 1995-96, the Canadian governemnt decided to reduce the economic budget for the country. This was achieved with cutting the nominal spending and public sector employment of the Canada. Hence, we negative change in the year 1995 in the Government Spending (North America) - By Change graph.
+
+\section{References}
+\begin{enumerate}
+  \item http://en.wikipedia.org/wiki/American\_Recovery\_and\_Reinvestment\_Act\_of\_2009
+  \item http://www.fraserinstitute.org/uploadedFiles/fraser-ca/Content/research-news/research/publications/BudgetBlueprint.pdf
+  \item https://www.quandl.com/ODA/USA\_GGX-United-States-General-Government-Total-Expenditure-USD-Billions
+  \item https://www.quandl.com/ODA/CAN\_GGX-Canada-General-Government-Total-Expenditure-USD-Billions
+  \item https://www.quandl.com/ODA/MEX\_GGX-Mexico-General-Government-Total-Expenditure-USD-Billions
+\end{enumerate}
+\end{document}
