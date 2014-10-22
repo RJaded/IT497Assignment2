@@ -9,4 +9,4 @@ hau.Rnw <- This file contains the RSweave code.
 
 hau.pdf <- This is the pdf file generated from the RSweave file.
 
-homework#2.R <- This file consists of the R script used to extract data and manipulate/generate graphs.
+homework2.R <- This file consists of the R script used to extract data and manipulate/generate graphs.
